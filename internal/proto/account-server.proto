@@ -4,6 +4,7 @@ package accountpb;
 
 service Account {
   rpc GetByID(UserID) returns (User) {}
+  rpc CreateUser(User) returns (UserID) {}
 }
 
 message UserID {

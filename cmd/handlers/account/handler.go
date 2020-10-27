@@ -6,7 +6,8 @@ import (
 )
 
 type Handler interface {
-	Get(ctx *fasthttp.RequestCtx)
+	GetByID(ctx *fasthttp.RequestCtx)
+	GetByEmail(ctx *fasthttp.RequestCtx)
 	Create(ctx *fasthttp.RequestCtx)
 	Edit(ctx *fasthttp.RequestCtx)
 	Delete(ctx *fasthttp.RequestCtx)
@@ -26,9 +27,8 @@ func NewHandler(accountService accountService, accountTransport accountTransport
 	}
 }
 
-func (h *handler) Authorization(ctx *fasthttp.RequestCtx) {
-	fmt.Println("New incoming request: POST /account/account")
-	auth, err := h.authorizationTransport.AuthorizationDecode(ctx)
+func (h *handler) GetByID(ctx *fasthttp.RequestCtx) {
+	userID, err := h.accountTransport.GetByIDDecode(ctx)
 	if err != nil {
 		fmt.Println("Create: cannot decode request")
 		err = h.errorWorker.ServeJSONError(ctx, err)
@@ -38,7 +38,7 @@ func (h *handler) Authorization(ctx *fasthttp.RequestCtx) {
 		return
 	}
 
-	cookie, err := h.authorizationService.Authorization(auth)
+	user, err := h.accountService.GetByID(userID)
 	if err != nil {
 		fmt.Println("Create: bad usecase: ", err)
 		err = h.errorWorker.ServeJSONError(ctx, err)
@@ -48,7 +48,7 @@ func (h *handler) Authorization(ctx *fasthttp.RequestCtx) {
 		return
 	}
 
-	err = h.authorizationTransport.AuthorizationEncode(ctx, cookie)
+	err = h.accountTransport.GetByIDEncode(ctx, user)
 	if err != nil {
 		fmt.Println("Create: cannot encode response: ", err)
 		err = h.errorWorker.ServeJSONError(ctx, err)
@@ -59,9 +59,8 @@ func (h *handler) Authorization(ctx *fasthttp.RequestCtx) {
 	}
 }
 
-func (h *handler) Registration(ctx *fasthttp.RequestCtx) {
-	fmt.Println("New incoming request: POST /account/account")
-	auth, err := h.authorizationTransport.RegistrationDecode(ctx)
+func (h *handler) GetByEmail(ctx *fasthttp.RequestCtx) {
+	email, err := h.accountTransport.GetByEmailDecode(ctx)
 	if err != nil {
 		fmt.Println("Create: cannot decode request")
 		err = h.errorWorker.ServeJSONError(ctx, err)
@@ -71,7 +70,7 @@ func (h *handler) Registration(ctx *fasthttp.RequestCtx) {
 		return
 	}
 
-	cookie, err := h.authorizationService.Registration(auth)
+	user, err := h.accountService.GetByEmail(email)
 	if err != nil {
 		fmt.Println("Create: bad usecase: ", err)
 		err = h.errorWorker.ServeJSONError(ctx, err)
@@ -81,7 +80,7 @@ func (h *handler) Registration(ctx *fasthttp.RequestCtx) {
 		return
 	}
 
-	err = h.authorizationTransport.RegistrationEncode(ctx, cookie)
+	err = h.accountTransport.GetByEmailEncode(ctx, user)
 	if err != nil {
 		fmt.Println("Create: cannot encode response: ", err)
 		err = h.errorWorker.ServeJSONError(ctx, err)
@@ -92,9 +91,8 @@ func (h *handler) Registration(ctx *fasthttp.RequestCtx) {
 	}
 }
 
-func (h *handler) GetUserIdByCookie(ctx *fasthttp.RequestCtx) {
-	fmt.Println("New incoming request: POST /account/account")
-	cookieValue, err := h.authorizationTransport.GetUserIdByCookieDecode(ctx)
+func (h *handler) Create(ctx *fasthttp.RequestCtx) {
+	createUser, err := h.accountTransport.CreateDecode(ctx)
 	if err != nil {
 		fmt.Println("Create: cannot decode request")
 		err = h.errorWorker.ServeJSONError(ctx, err)
@@ -104,7 +102,7 @@ func (h *handler) GetUserIdByCookie(ctx *fasthttp.RequestCtx) {
 		return
 	}
 
-	userID, err := h.authorizationService.GetUserIdByCookie(cookieValue)
+	user, err := h.accountService.Create(createUser)
 	if err != nil {
 		fmt.Println("Create: bad usecase: ", err)
 		err = h.errorWorker.ServeJSONError(ctx, err)
@@ -114,7 +112,71 @@ func (h *handler) GetUserIdByCookie(ctx *fasthttp.RequestCtx) {
 		return
 	}
 
-	err = h.authorizationTransport.GetUserIdByCookieEncode(ctx, userID)
+	err = h.accountTransport.CreateEncode(ctx, user)
+	if err != nil {
+		fmt.Println("Create: cannot encode response: ", err)
+		err = h.errorWorker.ServeJSONError(ctx, err)
+		if err != nil {
+			h.errorWorker.ServeFatalError(ctx)
+		}
+		return
+	}
+}
+
+func (h *handler) Edit(ctx *fasthttp.RequestCtx) {
+	editUser, err := h.accountTransport.EditDecode(ctx)
+	if err != nil {
+		fmt.Println("Create: cannot decode request")
+		err = h.errorWorker.ServeJSONError(ctx, err)
+		if err != nil {
+			h.errorWorker.ServeFatalError(ctx)
+		}
+		return
+	}
+
+	user, err := h.accountService.Edit(editUser)
+	if err != nil {
+		fmt.Println("Create: bad usecase: ", err)
+		err = h.errorWorker.ServeJSONError(ctx, err)
+		if err != nil {
+			h.errorWorker.ServeFatalError(ctx)
+		}
+		return
+	}
+
+	err = h.accountTransport.EditEncode(ctx, user)
+	if err != nil {
+		fmt.Println("Create: cannot encode response: ", err)
+		err = h.errorWorker.ServeJSONError(ctx, err)
+		if err != nil {
+			h.errorWorker.ServeFatalError(ctx)
+		}
+		return
+	}
+}
+
+func (h *handler) Delete(ctx *fasthttp.RequestCtx) {
+	userID, err := h.accountTransport.DeleteDecode(ctx)
+	if err != nil {
+		fmt.Println("Create: cannot decode request")
+		err = h.errorWorker.ServeJSONError(ctx, err)
+		if err != nil {
+			h.errorWorker.ServeFatalError(ctx)
+		}
+		return
+	}
+
+	err = h.accountService.Delete(userID)
+	if err != nil {
+		fmt.Println("Create: bad usecase: ", err)
+		err = h.errorWorker.ServeJSONError(ctx, err)
+		if err != nil {
+			h.errorWorker.ServeFatalError(ctx)
+		}
+		return
+	}
+
+	err = h.accountTransport.DeleteEncode(ctx)
 	if err != nil {
 		fmt.Println("Create: cannot encode response: ", err)
 		err = h.errorWorker.ServeJSONError(ctx, err)

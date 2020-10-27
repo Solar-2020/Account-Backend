@@ -16,12 +16,12 @@ func NewFastHttpRouter(account accountHandler.Handler, middleware Middleware) *f
 
 	router.PanicHandler = panicHandler
 
-	router.Handle("POST", "/account/account", middleware.CORS(authorization.Authorization))
-	router.Handle("GET", "/account/registration", middleware.CORS(authorization.Registration))
+	router.Handle("GET", "/account/by-user/:userID", middleware.CORS(account.GetByID))
+	router.Handle("GET", "/account/by-email/:email", middleware.CORS(account.GetByEmail))
 
-	router.Handle("GET", "/account/user-id", middleware.CORS(authorization.GetUserIdByCookie))
-
-
+	router.Handle("POST", "/account/user", middleware.CORS(account.Create))
+	router.Handle("PUT", "/account/user", middleware.CORS(account.Edit))
+	router.Handle("DELETE", "/account/user", middleware.CORS(account.Delete))
 
 	return router
 }

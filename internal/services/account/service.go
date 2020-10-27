@@ -1,120 +1,92 @@
 package account
 
 import (
-	"context"
 	"database/sql"
 	"errors"
-	"github.com/Solar-2020/Account-Backend/internal/models"
-	accountpb "github.com/Solar-2020/Account-Backend/internal/proto"
-	"time"
+	"github.com/Solar-2020/Account-Backend/pkg/models"
 )
 
 type Service interface {
-	GetByID(context.Context, *accountpb.UserID) (*accountpb.User, error)
+	GetByID(userID int) (user models.User, err error)
+	GetByEmail(email string) (user models.User, err error)
+	Create(createUser models.User) (user models.User, err error)
+	Edit(editUser models.User) (user models.User, err error)
+	Delete(userID int) (err error)
 }
 
 type service struct {
-	authorizationStorage  authorizationStorage
-	accountClient         accountClient
-	defaultCookieLifeTime time.Duration
+	accountStorage accountStorage
 }
 
-func NewService(authorizationStorage authorizationStorage, accountClient accountClient, defaultCookieLifeTime time.Duration) Service {
+func NewService(accountStorage accountStorage) Service {
 	return &service{
-		authorizationStorage:  authorizationStorage,
-		accountClient:         accountClient,
-		defaultCookieLifeTime: defaultCookieLifeTime,
+		accountStorage: accountStorage,
 	}
 }
 
-func (s *service) GetByID(ctx context.Context, id *accountpb.UserID) (*accountpb.User, error) {
-	panic("implement me")
-}
-
-func (s *service) Authorization(request models.Authorization) (cookie models.Cookie, err error) {
-	userID, err := s.accountClient.GetUserIDByEmail(request.Login)
-	if err != nil {
-		return
-	}
-
-	err = s.checkLogoPass(userID, request.Password)
-	if err != nil {
-		return
-	}
-
-	cookie, err = s.createCookie(userID, s.defaultCookieLifeTime)
-	if err != nil {
-		return
-	}
-
-	err = s.authorizationStorage.InsertCookie(cookie)
-	return
-
-}
-
-func (s *service) Registration(request models.Registration) (cookie models.Cookie, err error) {
-	userID, err := s.accountClient.CreateUser(request)
-	if err != nil {
-		return
-	}
-
-	pass := s.generatePassword(userID, request.Password)
-
-	err = s.authorizationStorage.InsertPassword(pass)
-	if err != nil {
-		return
-	}
-
-	cookie, err = s.createCookie(userID, s.defaultCookieLifeTime)
-	if err != nil {
-		return
-	}
-
-	err = s.authorizationStorage.InsertCookie(cookie)
+func (s *service) GetByID(userID int) (user models.User, err error) {
+	user, err = s.accountStorage.SelectUserByID(userID)
 	return
 }
 
-func (s *service) GetUserIdByCookie(cookieValue string) (userID int, err error) {
-	cookie, err := s.authorizationStorage.SelectCookieByValue(cookieValue)
+func (s *service) GetByEmail(email string) (user models.User, err error) {
+	user, err = s.accountStorage.SelectUserByEmail(email)
+	return
+}
+
+func (s *service) Create(createUser models.User) (user models.User, err error) {
+	err = s.validateUser(createUser)
+	if err != nil {
+		return
+	}
+
+	err = s.checkUniqueEmail(createUser.Email)
+	if err != nil {
+		return
+	}
+
+	createUser.ID, err = s.accountStorage.InsertUser(createUser)
+	if err != nil {
+		return
+	}
+
+	return createUser, nil
+}
+
+func (s *service) Edit(editUser models.User) (user models.User, err error) {
+	err = s.validateUser(editUser)
+	if err != nil {
+		return
+	}
+
+	err = s.checkUniqueEmail(editUser.Email)
+	if err != nil {
+		return
+	}
+
+	err = s.accountStorage.UpdateUser(editUser)
+
+	return
+}
+
+func (s *service) Delete(userID int) (err error) {
+	err = s.accountStorage.DeleteUser(userID)
+	return
+}
+
+func (s *service) validateUser(user models.User) (err error) {
+	//TODO VALIDATION
+	return
+}
+
+func (s *service) checkUniqueEmail(email string) (err error) {
+	_, err = s.accountStorage.SelectUserByEmail(email)
 	if err != nil {
 		if err == sql.ErrNoRows {
-			return userID, errors.New("Кука не действительна")
+			return nil
 		}
-		return
+		return err
 	}
 
-	if cookie.Expiration.Before(time.Now()) {
-		return userID, errors.New("Кука протухла")
-	}
-
-	return cookie.UserID, err
-}
-
-func (s *service) createCookie(userID int, expiration time.Duration) (cookie models.Cookie, err error) {
-
-	return
-}
-
-func (s *service) checkLogoPass(userID int, userPassword string) (err error) {
-	pass, err := s.authorizationStorage.SelectPasswordByUserID(userID)
-	if err != nil {
-		return
-	}
-
-	hashPassword := s.createPassword(userPassword, pass.Salt)
-	if hashPassword != pass.HashPassword {
-		return errors.New("Не верный пароль!")
-	}
-
-	return
-}
-
-func (s *service) generatePassword(userID int, userPassword string) (pass models.Password) {
-
-	return
-}
-
-func (s *service) createPassword(userPassword string, salt string) (hashPass string) {
-
-	return
+	return errors.New("Аккаунт с указанным email уже существует")
 }

@@ -1,27 +1,33 @@
 package accountHandler
 
 import (
-	"github.com/Solar-2020/Account-Backend/internal/models"
+	"github.com/Solar-2020/Account-Backend/pkg/models"
 	"github.com/valyala/fasthttp"
 )
 
 type accountService interface {
 	GetByID(userID int) (user models.User, err error)
 	GetByEmail(email string) (user models.User, err error)
-	Create(user models.User) (createdUser models.User, err error)
-	Edit(user models.User) (updatedUser models.User, err error)
+	Create(createUser models.User) (user models.User, err error)
+	Edit(editUser models.User) (user models.User, err error)
 	Delete(userID int) (err error)
 }
 
 type accountTransport interface {
-	AuthorizationDecode(ctx *fasthttp.RequestCtx) (request models.Authorization, err error)
-	AuthorizationEncode(ctx *fasthttp.RequestCtx, cookie models.Cookie) (err error)
+	GetByIDDecode(ctx *fasthttp.RequestCtx) (userID int, err error)
+	GetByIDEncode(ctx *fasthttp.RequestCtx, user models.User) (err error)
 
-	RegistrationDecode(ctx *fasthttp.RequestCtx) (request models.Registration, err error)
-	RegistrationEncode(ctx *fasthttp.RequestCtx, cookie models.Cookie) (err error)
+	GetByEmailDecode(ctx *fasthttp.RequestCtx) (email string, err error)
+	GetByEmailEncode(ctx *fasthttp.RequestCtx, user models.User) (err error)
 
-	GetUserIdByCookieDecode(ctx *fasthttp.RequestCtx) (cookieValue string, err error)
-	GetUserIdByCookieEncode(ctx *fasthttp.RequestCtx, userID int) (err error)
+	CreateDecode(ctx *fasthttp.RequestCtx) (createUser models.User, err error)
+	CreateEncode(ctx *fasthttp.RequestCtx, user models.User) (err error)
+
+	EditDecode(ctx *fasthttp.RequestCtx) (createUser models.User, err error)
+	EditEncode(ctx *fasthttp.RequestCtx, user models.User) (err error)
+
+	DeleteDecode(ctx *fasthttp.RequestCtx) (userID int, err error)
+	DeleteEncode(ctx *fasthttp.RequestCtx) (err error)
 }
 
 type errorWorker interface {

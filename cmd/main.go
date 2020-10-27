@@ -5,24 +5,20 @@ import (
 	"github.com/Solar-2020/Account-Backend/cmd/handlers"
 	accountHandler "github.com/Solar-2020/Account-Backend/cmd/handlers/account"
 	"github.com/Solar-2020/Account-Backend/internal/errorWorker"
-	accountpb "github.com/Solar-2020/Account-Backend/internal/proto"
 	"github.com/Solar-2020/Account-Backend/internal/services/account"
 	"github.com/Solar-2020/Account-Backend/internal/storages/accountStorage"
 	"github.com/kelseyhightower/envconfig"
 	_ "github.com/lib/pq"
 	"github.com/rs/zerolog"
 	"github.com/valyala/fasthttp"
-	"google.golang.org/grpc"
-	"google.golang.org/grpc/grpclog"
-	"net"
 	"os"
 	"os/signal"
 	"syscall"
 )
 
 type config struct {
-	Port                          string `envconfig:"PORT" default:"8099"`
-	AuthorizationDataBaseConnectionString string `envconfig:"AUTHORIZATION_DB_CONNECTION_STRING" default:"-"`
+	Port                            string `envconfig:"PORT" default:"8099"`
+	AccountDataBaseConnectionString string `envconfig:"ACCOUNT_DB_CONNECTION_STRING" default:"-"`
 }
 
 func main() {
@@ -35,8 +31,7 @@ func main() {
 		return
 	}
 
-
-	authorizationDB, err := sql.Open("postgres", cfg.AuthorizationDataBaseConnectionString)
+	authorizationDB, err := sql.Open("postgres", cfg.AccountDataBaseConnectionString)
 	if err != nil {
 		log.Fatal().Msg(err.Error())
 		return
@@ -47,35 +42,17 @@ func main() {
 
 	errorWorker := errorWorker.NewErrorWorker()
 
-	authorizationStorage := accountStorage.NewStorage(authorizationDB)
-	authorizationService := account.NewService(authorizationStorage)
-	authorizationTransport := account.NewTransport()
+	accountStorage := accountStorage.NewStorage(authorizationDB)
+	accountService := account.NewService(accountStorage)
+	accountTransport := account.NewTransport()
 
-	authorizationHandler := accountHandler.NewHandler(authorizationService, authorizationTransport, errorWorker)
+	accountHandler := accountHandler.NewHandler(accountService, accountTransport, errorWorker)
 
 	middlewares := handlers.NewMiddleware()
 
 	server := fasthttp.Server{
-		Handler: handlers.NewFastHttpRouter(authorizationHandler, middlewares).Handler,
+		Handler: handlers.NewFastHttpRouter(accountHandler, middlewares).Handler,
 	}
-
-
-
-	listener, err := net.Listen("tcp", ":5300")
-
-	if err != nil {
-		grpclog.Fatalf("failed to listen: %v", err)
-	}
-
-	opts := []grpc.ServerOption{}
-	grpcServer := grpc.NewServer(opts...)
-
-	accountpb.RegisterAccountServer(grpcServer, authorizationService)
-	grpcServer.Serve(listener)
-
-
-
-
 
 	go func() {
 		log.Info().Str("msg", "start server").Str("port", cfg.Port).Send()
@@ -100,3 +77,17 @@ func main() {
 		log.Info().Str("msg", "goodbye").Send()
 	}(<-c)
 }
+
+//func grpcListener(accountService account.Service) {
+//	listener, err := net.Listen("tcp", ":5300")
+//
+//	if err != nil {
+//		grpclog.Fatalf("failed to listen: %v", err)
+//	}
+//
+//	opts := []grpc.ServerOption{}
+//	grpcServer := grpc.NewServer(opts...)
+//
+//	accountpb.RegisterAccountServer(grpcServer, accountService)
+//	grpcServer.Serve(listener)
+//}
