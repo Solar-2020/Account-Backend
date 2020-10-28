@@ -3,7 +3,9 @@ package account
 import (
 	"encoding/json"
 	"github.com/Solar-2020/Account-Backend/pkg/models"
+	"github.com/go-playground/validator"
 	"github.com/valyala/fasthttp"
+	"net/url"
 	"strconv"
 )
 
@@ -25,10 +27,13 @@ type Transport interface {
 }
 
 type transport struct {
+	validator *validator.Validate
 }
 
 func NewTransport() Transport {
-	return &transport{}
+	return &transport{
+		validator: validator.New(),
+	}
 }
 
 func (t transport) GetByIDDecode(ctx *fasthttp.RequestCtx) (userID int, err error) {
@@ -51,6 +56,7 @@ func (t transport) GetByIDEncode(ctx *fasthttp.RequestCtx, user models.User) (er
 
 func (t transport) GetByEmailDecode(ctx *fasthttp.RequestCtx) (email string, err error) {
 	email = ctx.UserValue("email").(string)
+	email, err = url.QueryUnescape(email)
 	return
 }
 
@@ -67,6 +73,10 @@ func (t transport) GetByEmailEncode(ctx *fasthttp.RequestCtx, user models.User) 
 
 func (t transport) CreateDecode(ctx *fasthttp.RequestCtx) (createUser models.User, err error) {
 	err = json.Unmarshal(ctx.Request.Body(), &createUser)
+	if err != nil {
+		return
+	}
+	err = t.validator.Struct(createUser)
 	return
 }
 
@@ -83,6 +93,10 @@ func (t transport) CreateEncode(ctx *fasthttp.RequestCtx, user models.User) (err
 
 func (t transport) EditDecode(ctx *fasthttp.RequestCtx) (editUser models.User, err error) {
 	err = json.Unmarshal(ctx.Request.Body(), &editUser)
+	if err != nil {
+		return
+	}
+	err = t.validator.Struct(editUser)
 	return
 }
 

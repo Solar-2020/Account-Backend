@@ -4,9 +4,11 @@ import (
 	"database/sql"
 	"github.com/Solar-2020/Account-Backend/cmd/handlers"
 	accountHandler "github.com/Solar-2020/Account-Backend/cmd/handlers/account"
-	"github.com/Solar-2020/Account-Backend/internal/errorWorker"
 	"github.com/Solar-2020/Account-Backend/internal/services/account"
 	"github.com/Solar-2020/Account-Backend/internal/storages/accountStorage"
+	"github.com/Solar-2020/GoUtils/common"
+	httputils "github.com/Solar-2020/GoUtils/http"
+	"github.com/Solar-2020/GoUtils/http/errorWorker"
 	"github.com/kelseyhightower/envconfig"
 	_ "github.com/lib/pq"
 	"github.com/rs/zerolog"
@@ -17,7 +19,7 @@ import (
 )
 
 type config struct {
-	Port                            string `envconfig:"PORT" default:"8099"`
+	common.SharedConfig
 	AccountDataBaseConnectionString string `envconfig:"ACCOUNT_DB_CONNECTION_STRING" default:"-"`
 }
 
@@ -48,7 +50,7 @@ func main() {
 
 	accountHandler := accountHandler.NewHandler(accountService, accountTransport, errorWorker)
 
-	middlewares := handlers.NewMiddleware()
+	middlewares := httputils.NewMiddleware()
 
 	server := fasthttp.Server{
 		Handler: handlers.NewFastHttpRouter(accountHandler, middlewares).Handler,

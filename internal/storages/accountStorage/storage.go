@@ -29,7 +29,7 @@ func (s *storage) InsertUser(user models.User) (userID int, err error) {
 	const sqlQuery = `
 	INSERT INTO users(email, name, surname, avatar_url)
 	VALUES ($1, $2, $3, $4)
-	RETURNING id;`
+	RETURNING id`
 
 	err = s.db.QueryRow(sqlQuery, user.Email, user.Name, user.Surname, user.AvatarURL).Scan(&userID)
 
@@ -44,8 +44,7 @@ func (s *storage) SelectUserByID(userID int) (user models.User, err error) {
 	const sqlQuery = `
 	SELECT u.id, u.email, u.name, u.surname, u.avatar_url
 	FROM users as u
-	WHERE u.id = $1
-	RETURNING id;`
+	WHERE u.id = $1;`
 
 	err = s.db.QueryRow(sqlQuery, userID).Scan(&user.ID, &user.Email, &user.Name, &user.Surname, &user.AvatarURL)
 
@@ -56,8 +55,7 @@ func (s *storage) SelectUserByEmail(email string) (user models.User, err error) 
 	const sqlQuery = `
 	SELECT u.id, u.email, u.name, u.surname, u.avatar_url
 	FROM users as u
-	WHERE UPPER(u.email) = UPPER($1)
-	RETURNING id;`
+	WHERE UPPER(u.email) = UPPER($1);`
 
 	err = s.db.QueryRow(sqlQuery, email).Scan(&user.ID, &user.Email, &user.Name, &user.Surname, &user.AvatarURL)
 
