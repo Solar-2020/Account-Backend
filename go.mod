@@ -3,7 +3,7 @@ module github.com/Solar-2020/Account-Backend
 go 1.14
 
 require (
-	github.com/Solar-2020/Authorization-Backend v0.0.0-20201028130607-d15b917ed022 // indirect
+	github.com/Solar-2020/Authorization-Backend v1.0.0
 	github.com/Solar-2020/GoUtils v0.0.0-20201028130128-34e4f0f5a23d
 	github.com/buaazp/fasthttprouter v0.1.1
 	github.com/go-playground/universal-translator v0.17.0 // indirect
@@ -19,6 +19,6 @@ require (
 	google.golang.org/protobuf v1.25.0
 )
 
-replace github.com/Solar-2020/GoUtils => ../GoUtils
+// replace github.com/Solar-2020/GoUtils => ../GoUtils
 
-replace github.com/Solar-2020/Authorization-Backend => ../Authorization-Backend
+// replace github.com/Solar-2020/Authorization-Backend => ../Authorization-Backend

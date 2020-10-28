@@ -40,7 +40,6 @@ func (r *GetUserRequest) Encode() (queryString string, err error) {
 
 
 type AccountServiceInterface interface {
-	//UsersGroups(userID int) ([]models.GroupPreview, error)
 	GetUserByUid(userID int) (models.User, error)
 	GetUserByEmail(email string) (models.User, error)
 	UidToEmail(userID int) (string, error)

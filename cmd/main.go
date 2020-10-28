@@ -6,7 +6,9 @@ import (
 	accountHandler "github.com/Solar-2020/Account-Backend/cmd/handlers/account"
 	"github.com/Solar-2020/Account-Backend/internal/services/account"
 	"github.com/Solar-2020/Account-Backend/internal/storages/accountStorage"
+	authapi "github.com/Solar-2020/Authorization-Backend/pkg/api"
 	"github.com/Solar-2020/GoUtils/common"
+	"github.com/Solar-2020/GoUtils/context/session"
 	httputils "github.com/Solar-2020/GoUtils/http"
 	"github.com/Solar-2020/GoUtils/http/errorWorker"
 	"github.com/kelseyhightower/envconfig"
@@ -49,7 +51,10 @@ func main() {
 	accountTransport := account.NewTransport()
 
 	accountHandler := accountHandler.NewHandler(accountService, accountTransport, errorWorker)
-
+	authService := authapi.AuthClient{
+		Addr:    cfg.AuthServiceAddress,
+	}
+	session.RegisterAuthService(&authService)
 	middlewares := httputils.NewMiddleware()
 
 	server := fasthttp.Server{
