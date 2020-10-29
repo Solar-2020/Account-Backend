@@ -62,10 +62,10 @@ func (c *AccountClient) UidToEmail(userID int) (email string, err error) {
 }
 
 func (c *AccountClient) GetUserByUid(userID int) (models.User, error) {
-	return c.GetUser(userID, "", "/internal/account/by-user")
+	return c.GetUser(userID, "", "/api/internal/account/by-user")
 }
 func (c *AccountClient) GetUserByEmail(email string) (models.User, error){
-	return c.GetUser(0, email, "/internal/account/by-email")
+	return c.GetUser(0, email, "/api/internal/account/by-email")
 }
 func (c *AccountClient) GetUser(userID int, email string, address string) (res models.User, err error) {
 	req := GetUserRequest{
@@ -85,7 +85,7 @@ func (c *AccountClient) GetUser(userID int, email string, address string) (res m
 func (c *AccountClient) CreateUser(request CreateRequest) (resp CreateResponse, err error) {
 	endpoint := service.ServiceEndpoint{
 		Service:  c,
-		Endpoint: "/internal/account/user",
+		Endpoint: "/api/internal/account/user",
 		Method:   "POST",
 	}
 	err = endpoint.Send(&request, &resp)
