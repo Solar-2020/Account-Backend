@@ -2,6 +2,7 @@ package account
 
 import (
 	"encoding/json"
+	"errors"
 	"github.com/Solar-2020/Account-Backend/pkg/models"
 	"github.com/go-playground/validator"
 	"github.com/valyala/fasthttp"
@@ -12,6 +13,8 @@ import (
 type Transport interface {
 	GetByIDDecode(ctx *fasthttp.RequestCtx) (userID int, err error)
 	GetByIDEncode(ctx *fasthttp.RequestCtx, user models.User) (err error)
+
+	GetByCookieDecode(ctx *fasthttp.RequestCtx) (userID int, err error)
 
 	GetByEmailDecode(ctx *fasthttp.RequestCtx) (email string, err error)
 	GetByEmailEncode(ctx *fasthttp.RequestCtx, user models.User) (err error)
@@ -52,6 +55,15 @@ func (t transport) GetByIDEncode(ctx *fasthttp.RequestCtx, user models.User) (er
 	ctx.Response.Header.SetStatusCode(fasthttp.StatusOK)
 	ctx.SetBody(body)
 	return
+}
+
+func (t transport) GetByCookieDecode(ctx *fasthttp.RequestCtx) (userID int, err error) {
+	var ok bool
+	userID, ok = ctx.UserValue("userID").(int)
+	if ok {
+		return
+	}
+	return userID, errors.New("userID not found")
 }
 
 func (t transport) GetByEmailDecode(ctx *fasthttp.RequestCtx) (email string, err error) {

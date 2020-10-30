@@ -4,12 +4,12 @@ import (
 	"database/sql"
 	"github.com/Solar-2020/Account-Backend/cmd/handlers"
 	accountHandler "github.com/Solar-2020/Account-Backend/cmd/handlers/account"
+	"github.com/Solar-2020/Account-Backend/internal/clients/auth"
 	"github.com/Solar-2020/Account-Backend/internal/services/account"
 	"github.com/Solar-2020/Account-Backend/internal/storages/accountStorage"
 	authapi "github.com/Solar-2020/Authorization-Backend/pkg/api"
 	"github.com/Solar-2020/GoUtils/common"
 	"github.com/Solar-2020/GoUtils/context/session"
-	httputils "github.com/Solar-2020/GoUtils/http"
 	"github.com/Solar-2020/GoUtils/http/errorWorker"
 	"github.com/kelseyhightower/envconfig"
 	_ "github.com/lib/pq"
@@ -23,6 +23,7 @@ import (
 type config struct {
 	common.SharedConfig
 	AccountDataBaseConnectionString string `envconfig:"ACCOUNT_DB_CONNECTION_STRING" default:"-"`
+	ServerSecret                    string `envconfig:"SERVER_SECRET" default:"Basic secret"`
 }
 
 func main() {
@@ -52,10 +53,12 @@ func main() {
 
 	accountHandler := accountHandler.NewHandler(accountService, accountTransport, errorWorker)
 	authService := authapi.AuthClient{
-		Addr:    cfg.AuthServiceAddress,
+		Addr: cfg.AuthServiceAddress,
 	}
 	session.RegisterAuthService(&authService)
-	middlewares := httputils.NewMiddleware()
+
+	authClient := auth.NewClient(cfg.AuthServiceAddress, cfg.ServerSecret)
+	middlewares := handlers.NewMiddleware(&log, authClient)
 
 	server := fasthttp.Server{
 		Handler: handlers.NewFastHttpRouter(accountHandler, middlewares).Handler,

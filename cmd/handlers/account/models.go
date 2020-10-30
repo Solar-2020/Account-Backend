@@ -17,6 +17,8 @@ type accountTransport interface {
 	GetByIDDecode(ctx *fasthttp.RequestCtx) (userID int, err error)
 	GetByIDEncode(ctx *fasthttp.RequestCtx, user models.User) (err error)
 
+	GetByCookieDecode(ctx *fasthttp.RequestCtx) (userID int, err error)
+
 	GetByEmailDecode(ctx *fasthttp.RequestCtx) (email string, err error)
 	GetByEmailEncode(ctx *fasthttp.RequestCtx, user models.User) (err error)
 

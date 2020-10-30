@@ -1,15 +1,17 @@
 package accountHandler
 
 import (
-	"github.com/Solar-2020/GoUtils/context"
+	"github.com/valyala/fasthttp"
 )
 
 type Handler interface {
-	GetByID(ctx context.Context)
-	GetByEmail(ctx context.Context)
-	Create(ctx context.Context)
-	Edit(ctx context.Context)
-	Delete(ctx context.Context)
+	GetByID(ctx *fasthttp.RequestCtx)
+	GetByEmail(ctx *fasthttp.RequestCtx)
+	GetByCookie(ctx *fasthttp.RequestCtx)
+
+	Create(ctx *fasthttp.RequestCtx)
+	Edit(ctx *fasthttp.RequestCtx)
+	Delete(ctx *fasthttp.RequestCtx)
 }
 
 type handler struct {
@@ -26,8 +28,8 @@ func NewHandler(accountService accountService, accountTransport accountTransport
 	}
 }
 
-func (h *handler) GetByID(ctx context.Context) {
-	userID, err := h.accountTransport.GetByIDDecode(ctx.RequestCtx)
+func (h *handler) GetByID(ctx *fasthttp.RequestCtx) {
+	userID, err := h.accountTransport.GetByIDDecode(ctx)
 	if err != nil {
 		h.handleError(err, ctx)
 		return
@@ -39,15 +41,15 @@ func (h *handler) GetByID(ctx context.Context) {
 		return
 	}
 
-	err = h.accountTransport.GetByIDEncode(ctx.RequestCtx, user)
+	err = h.accountTransport.GetByIDEncode(ctx, user)
 	if err != nil {
 		h.handleError(err, ctx)
 		return
 	}
 }
 
-func (h *handler) GetByEmail(ctx context.Context) {
-	email, err := h.accountTransport.GetByEmailDecode(ctx.RequestCtx)
+func (h *handler) GetByEmail(ctx *fasthttp.RequestCtx) {
+	email, err := h.accountTransport.GetByEmailDecode(ctx)
 	if err != nil {
 		h.handleError(err, ctx)
 		return
@@ -59,15 +61,35 @@ func (h *handler) GetByEmail(ctx context.Context) {
 		return
 	}
 
-	err = h.accountTransport.GetByEmailEncode(ctx.RequestCtx, user)
+	err = h.accountTransport.GetByEmailEncode(ctx, user)
 	if err != nil {
 		h.handleError(err, ctx)
 		return
 	}
 }
 
-func (h *handler) Create(ctx context.Context) {
-	createUser, err := h.accountTransport.CreateDecode(ctx.RequestCtx)
+func (h *handler) GetByCookie(ctx *fasthttp.RequestCtx) {
+	userID, err := h.accountTransport.GetByCookieDecode(ctx)
+	if err != nil {
+		h.handleError(err, ctx)
+		return
+	}
+
+	user, err := h.accountService.GetByID(userID)
+	if err != nil {
+		h.handleError(err, ctx)
+		return
+	}
+
+	err = h.accountTransport.GetByIDEncode(ctx, user)
+	if err != nil {
+		h.handleError(err, ctx)
+		return
+	}
+}
+
+func (h *handler) Create(ctx *fasthttp.RequestCtx) {
+	createUser, err := h.accountTransport.CreateDecode(ctx)
 	if err != nil {
 		h.handleError(err, ctx)
 		return
@@ -79,23 +101,19 @@ func (h *handler) Create(ctx context.Context) {
 		return
 	}
 
-	err = h.accountTransport.CreateEncode(ctx.RequestCtx, user)
+	err = h.accountTransport.CreateEncode(ctx, user)
 	if err != nil {
 		h.handleError(err, ctx)
 		return
 	}
 }
 
-func (h *handler) Edit(ctx context.Context) {
-	editUser, err := h.accountTransport.EditDecode(ctx.RequestCtx)
+func (h *handler) Edit(ctx *fasthttp.RequestCtx) {
+	editUser, err := h.accountTransport.EditDecode(ctx)
 	if err != nil {
 		h.handleError(err, ctx)
 		return
 	}
-	if editUser.ID != ctx.Session.Uid {
-		editUser.ID = ctx.Session.Uid
-	}
-
 
 	user, err := h.accountService.Edit(editUser)
 	if err != nil {
@@ -103,22 +121,18 @@ func (h *handler) Edit(ctx context.Context) {
 		return
 	}
 
-	err = h.accountTransport.EditEncode(ctx.RequestCtx, user)
+	err = h.accountTransport.EditEncode(ctx, user)
 	if err != nil {
 		h.handleError(err, ctx)
 		return
 	}
 }
 
-func (h *handler) Delete(ctx context.Context) {
-	userID, err := h.accountTransport.DeleteDecode(ctx.RequestCtx)
+func (h *handler) Delete(ctx *fasthttp.RequestCtx) {
+	userID, err := h.accountTransport.DeleteDecode(ctx)
 	if err != nil {
 		h.handleError(err, ctx)
 		return
-	}
-
-	if userID != ctx.Session.Uid {
-		userID = ctx.Session.Uid
 	}
 
 	err = h.accountService.Delete(userID)
@@ -127,17 +141,17 @@ func (h *handler) Delete(ctx context.Context) {
 		return
 	}
 
-	err = h.accountTransport.DeleteEncode(ctx.RequestCtx)
+	err = h.accountTransport.DeleteEncode(ctx)
 	if err != nil {
 		h.handleError(err, ctx)
 		return
 	}
 }
 
-func (h *handler) handleError(err error, ctx context.Context) {
-	err = h.errorWorker.ServeJSONError(ctx.RequestCtx, err)
+func (h *handler) handleError(err error, ctx *fasthttp.RequestCtx) {
+	err = h.errorWorker.ServeJSONError(ctx, err)
 	if err != nil {
-		h.errorWorker.ServeFatalError(ctx.RequestCtx)
+		h.errorWorker.ServeFatalError(ctx)
 	}
 	return
 }
