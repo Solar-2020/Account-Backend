@@ -9,8 +9,9 @@ import (
 )
 
 var (
-	ErrorUserNotFound = errors.New("Пользователь не найден")
+	ErrorUserNotFound   = errors.New("Пользователь не найден")
 	ErrorInternalServer = errors.New("Внутренняя ошибка сервера")
+	ErrorNoUniqueEmail  = errors.New("Аккаунт с указанным email уже существует")
 )
 
 type Service interface {
@@ -115,9 +116,13 @@ func (s *service) Edit(editUser models.User) (user models.User, err error) {
 		return
 	}
 
-	err = s.checkUniqueEmail(editUser.Email)
+	existUser, err := s.accountStorage.SelectUserByEmail(editUser.Email)
 	if err != nil {
-		return
+		return user, err
+	}
+
+	if existUser.ID != editUser.ID {
+		return user, ErrorNoUniqueEmail
 	}
 
 	err = s.accountStorage.UpdateUser(editUser)
@@ -144,5 +149,5 @@ func (s *service) checkUniqueEmail(email string) (err error) {
 		return err
 	}
 
-	return errors.New("Аккаунт с указанным email уже существует")
+	return ErrorNoUniqueEmail
 }

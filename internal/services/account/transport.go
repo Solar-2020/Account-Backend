@@ -128,6 +128,12 @@ func (t transport) EditDecode(ctx *fasthttp.RequestCtx) (editUser models.User, e
 		return
 	}
 	err = t.validator.Struct(editUser)
+
+	var ok bool
+	editUser.ID, ok = ctx.UserValue("userID").(int)
+	if !ok {
+		return editUser, errors.New("userID not found")
+	}
 	return
 }
 
@@ -143,9 +149,11 @@ func (t transport) EditEncode(ctx *fasthttp.RequestCtx, user models.User) (err e
 }
 
 func (t transport) DeleteDecode(ctx *fasthttp.RequestCtx) (userID int, err error) {
-	userIDStr := ctx.UserValue("userID").(string)
-	userID, err = strconv.Atoi(userIDStr)
-
+	var ok bool
+	userID, ok = ctx.UserValue("userID").(int)
+	if !ok {
+		return userID, errors.New("userID not found")
+	}
 	return
 }
 
