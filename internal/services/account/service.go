@@ -127,7 +127,7 @@ func (s *service) Edit(editUser models.User) (user models.User, err error) {
 
 	err = s.accountStorage.UpdateUser(editUser)
 
-	return
+	return editUser, err
 }
 
 func (s *service) Delete(userID int) (err error) {
