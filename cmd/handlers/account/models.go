@@ -9,6 +9,7 @@ type accountService interface {
 	GetByID(userID int) (user models.User, err error)
 	GetByEmail(email string) (user models.User, err error)
 	Create(createUser models.User) (user models.User, err error)
+	GetYandex(userToken string) (user models.User, err error)
 	Edit(editUser models.User) (user models.User, err error)
 	Delete(userID int) (err error)
 }
@@ -24,6 +25,9 @@ type accountTransport interface {
 
 	CreateDecode(ctx *fasthttp.RequestCtx) (createUser models.User, err error)
 	CreateEncode(ctx *fasthttp.RequestCtx, user models.User) (err error)
+
+	GetYandexDecode(ctx *fasthttp.RequestCtx) (userToken string, err error)
+	GetYandexEncode(ctx *fasthttp.RequestCtx, user models.User) (err error)
 
 	EditDecode(ctx *fasthttp.RequestCtx) (createUser models.User, err error)
 	EditEncode(ctx *fasthttp.RequestCtx, user models.User) (err error)

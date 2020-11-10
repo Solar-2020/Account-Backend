@@ -3,6 +3,8 @@ package account
 import (
 	"database/sql"
 	"errors"
+	"github.com/Solar-2020/Account-Backend/internal/clients/yandex"
+	models2 "github.com/Solar-2020/Account-Backend/internal/models"
 	"github.com/Solar-2020/Account-Backend/pkg/models"
 )
 
@@ -10,17 +12,20 @@ type Service interface {
 	GetByID(userID int) (user models.User, err error)
 	GetByEmail(email string) (user models.User, err error)
 	Create(createUser models.User) (user models.User, err error)
+	GetYandex(userToken string) (user models.User, err error)
 	Edit(editUser models.User) (user models.User, err error)
 	Delete(userID int) (err error)
 }
 
 type service struct {
 	accountStorage accountStorage
+	yandexClient   yandex.Client
 }
 
-func NewService(accountStorage accountStorage) Service {
+func NewService(accountStorage accountStorage, yandexClient yandex.Client) Service {
 	return &service{
 		accountStorage: accountStorage,
+		yandexClient:   yandexClient,
 	}
 }
 
@@ -51,6 +56,40 @@ func (s *service) Create(createUser models.User) (user models.User, err error) {
 	}
 
 	return createUser, nil
+}
+
+func (s *service) GetYandex(userToken string) (user models.User, err error) {
+	var yandexUser models2.YandexUser
+	yandexUser, err = s.yandexClient.GetUserInfo(userToken)
+	if err != nil {
+		return
+	}
+
+	userID, err := s.accountStorage.SelectUserIDByYandexID(yandexUser.ID)
+	if err!= nil {
+		if err == sql.ErrNoRows {
+			user.Name = yandexUser.FirstName
+			user.Surname = yandexUser.LastName
+			user.Email = yandexUser.DefaultEmail
+			if yandexUser.IsAvatarEmpty == false {
+				user.AvatarURL = yandexUser.DefaultAvatarID
+			}
+
+			user, err = s.Create(user)
+			if err != nil {
+				return
+			}
+
+			err = s.accountStorage.InsertYandexUser(user.ID, yandexUser.ID)
+
+			return
+		}
+		return
+	}
+
+	user, err = s.accountStorage.SelectUserByID(userID)
+
+	return
 }
 
 func (s *service) Edit(editUser models.User) (user models.User, err error) {

@@ -25,6 +25,9 @@ type Transport interface {
 	EditDecode(ctx *fasthttp.RequestCtx) (createUser models.User, err error)
 	EditEncode(ctx *fasthttp.RequestCtx, user models.User) (err error)
 
+	GetYandexDecode(ctx *fasthttp.RequestCtx) (userToken string, err error)
+	GetYandexEncode(ctx *fasthttp.RequestCtx, user models.User) (err error)
+
 	DeleteDecode(ctx *fasthttp.RequestCtx) (userID int, err error)
 	DeleteEncode(ctx *fasthttp.RequestCtx) (err error)
 }
@@ -93,6 +96,22 @@ func (t transport) CreateDecode(ctx *fasthttp.RequestCtx) (createUser models.Use
 }
 
 func (t transport) CreateEncode(ctx *fasthttp.RequestCtx, user models.User) (err error) {
+	body, err := json.Marshal(user)
+	if err != nil {
+		return
+	}
+	ctx.Response.Header.SetContentType("application/json")
+	ctx.Response.Header.SetStatusCode(fasthttp.StatusOK)
+	ctx.SetBody(body)
+	return
+}
+
+func (t transport) GetYandexDecode(ctx *fasthttp.RequestCtx) (userToken string, err error) {
+	userToken = ctx.UserValue("userToken").(string)
+	return
+}
+
+func (t transport) GetYandexEncode(ctx *fasthttp.RequestCtx, user models.User) (err error) {
 	body, err := json.Marshal(user)
 	if err != nil {
 		return

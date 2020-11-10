@@ -23,5 +23,6 @@ func NewFastHttpRouter(account accountHandler.Handler, middleware Middleware) *f
 	router.Handle("GET", "/api/internal/account/by-user/:userID", middleware.Log(middleware.InternalAuth(account.GetByID)))
 	router.Handle("GET", "/api/internal/account/by-email/:email", middleware.Log(middleware.InternalAuth(account.GetByEmail)))
 	router.Handle("POST", "/api/internal/account/user", middleware.Log(middleware.InternalAuth(account.Create)))
+	router.Handle("GET", "/api/internal/account/yandex/:userToken", middleware.Log(middleware.InternalAuth(account.GetYandex)))
 	return router
 }

@@ -5,6 +5,7 @@ import (
 	"github.com/Solar-2020/Account-Backend/cmd/handlers"
 	accountHandler "github.com/Solar-2020/Account-Backend/cmd/handlers/account"
 	"github.com/Solar-2020/Account-Backend/internal/clients/auth"
+	"github.com/Solar-2020/Account-Backend/internal/clients/yandex"
 	"github.com/Solar-2020/Account-Backend/internal/services/account"
 	"github.com/Solar-2020/Account-Backend/internal/storages/accountStorage"
 	authapi "github.com/Solar-2020/Authorization-Backend/pkg/api"
@@ -47,8 +48,10 @@ func main() {
 
 	errorWorker := errorWorker.NewErrorWorker()
 
+	yandexClient := yandex.NewClient()
+
 	accountStorage := accountStorage.NewStorage(authorizationDB)
-	accountService := account.NewService(accountStorage)
+	accountService := account.NewService(accountStorage, yandexClient)
 	accountTransport := account.NewTransport()
 
 	accountHandler := accountHandler.NewHandler(accountService, accountTransport, errorWorker)

@@ -7,10 +7,12 @@ import (
 
 type Storage interface {
 	InsertUser(user models.User) (userID int, err error)
+	InsertYandexUser(userID int, yandexID string) (err error)
 
 	UpdateUser(user models.User) (err error)
 	SelectUserByID(userID int) (user models.User, err error)
 	SelectUserByEmail(email string) (user models.User, err error)
+	SelectUserIDByYandexID(yandexID string) (userID int, err error)
 
 	DeleteUser(userID int) (err error)
 }
@@ -32,6 +34,16 @@ func (s *storage) InsertUser(user models.User) (userID int, err error) {
 	RETURNING id`
 
 	err = s.db.QueryRow(sqlQuery, user.Email, user.Name, user.Surname, user.AvatarURL).Scan(&userID)
+
+	return
+}
+
+func (s *storage) InsertYandexUser(userID int, yandexID string) (err error) {
+	const sqlQuery = `
+	INSERT INTO users_yandex(user_id, yandex_id)
+	VALUES ($1, $2);`
+
+	_, err = s.db.Exec(sqlQuery, userID, yandexID)
 
 	return
 }
@@ -58,6 +70,16 @@ func (s *storage) SelectUserByEmail(email string) (user models.User, err error) 
 	WHERE UPPER(u.email) = UPPER($1);`
 
 	err = s.db.QueryRow(sqlQuery, email).Scan(&user.ID, &user.Email, &user.Name, &user.Surname, &user.AvatarURL)
+
+	return
+}
+
+func (s *storage) SelectUserIDByYandexID(yandexID string) (userID int, err error) {
+	const sqlQuery = `
+	SELECT uy.user_id
+	FROM users_yandex AS uy
+	WHERE uy.yandex_id = $1;`
+	err = s.db.QueryRow(sqlQuery, yandexID).Scan(&userID)
 
 	return
 }
