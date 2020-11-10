@@ -43,7 +43,7 @@ func NewTransport() Transport {
 }
 
 func (t transport) GetByIDDecode(ctx *fasthttp.RequestCtx) (userID int, err error) {
-	userIDStr := ctx.UserValue("userID").(string)
+	userIDStr := ctx.UserValue("requestUserID").(string)
 	userID, err = strconv.Atoi(userIDStr)
 
 	return

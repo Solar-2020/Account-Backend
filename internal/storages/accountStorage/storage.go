@@ -49,7 +49,17 @@ func (s *storage) InsertYandexUser(userID int, yandexID string) (err error) {
 }
 
 func (s *storage) UpdateUser(user models.User) (err error) {
-	panic("implement me")
+	const sqlQuery = `
+	UPDATE users
+	SET email = $1,
+		name = $2,
+		surname = $3,
+		avatar_url = $4
+	WHERE id = $5;`
+
+	_, err = s.db.Exec(sqlQuery, user.Email, user.Name, user.Surname, user.AvatarURL, user.ID)
+
+	return
 }
 
 func (s *storage) SelectUserByID(userID int) (user models.User, err error) {
@@ -85,5 +95,11 @@ func (s *storage) SelectUserIDByYandexID(yandexID string) (userID int, err error
 }
 
 func (s *storage) DeleteUser(userID int) (err error) {
-	panic("implement me")
+	const sqlQuery = `
+	DELETE FROM users
+	WHERE id = $1;`
+
+	_, err = s.db.Exec(sqlQuery, userID)
+
+	return
 }

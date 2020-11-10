@@ -8,6 +8,11 @@ import (
 	"github.com/Solar-2020/Account-Backend/pkg/models"
 )
 
+var (
+	ErrorUserNotFound = errors.New("Пользователь не найден")
+	ErrorInternalServer = errors.New("Внутренняя ошибка сервера")
+)
+
 type Service interface {
 	GetByID(userID int) (user models.User, err error)
 	GetByEmail(email string) (user models.User, err error)
@@ -31,11 +36,23 @@ func NewService(accountStorage accountStorage, yandexClient yandex.Client) Servi
 
 func (s *service) GetByID(userID int) (user models.User, err error) {
 	user, err = s.accountStorage.SelectUserByID(userID)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return user, ErrorUserNotFound
+		}
+		return user, ErrorInternalServer
+	}
 	return
 }
 
 func (s *service) GetByEmail(email string) (user models.User, err error) {
 	user, err = s.accountStorage.SelectUserByEmail(email)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return user, ErrorUserNotFound
+		}
+		return user, ErrorInternalServer
+	}
 	return
 }
 
@@ -66,7 +83,7 @@ func (s *service) GetYandex(userToken string) (user models.User, err error) {
 	}
 
 	userID, err := s.accountStorage.SelectUserIDByYandexID(yandexUser.ID)
-	if err!= nil {
+	if err != nil {
 		if err == sql.ErrNoRows {
 			user.Name = yandexUser.FirstName
 			user.Surname = yandexUser.LastName
