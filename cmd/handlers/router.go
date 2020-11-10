@@ -15,8 +15,6 @@ func NewFastHttpRouter(account accountHandler.Handler, middleware Middleware) *f
 	router.Handle("GET", "/api/account/by-user/:requestUserID", middleware.Log(middleware.ExternalAuth(account.GetByID)))
 	router.Handle("GET", "/api/account/by-email/:email", middleware.Log(middleware.ExternalAuth(account.GetByEmail)))
 	router.Handle("GET", "/api/account/by-cookie", middleware.Log(middleware.ExternalAuth(account.GetByCookie)))
-
-	router.Handle("POST", "/api/account/user", middleware.Log(middleware.ExternalAuth(account.Create)))
 	router.Handle("PUT", "/api/account/user", middleware.Log(middleware.ExternalAuth(account.Edit)))
 	router.Handle("DELETE", "/api/account/user", middleware.Log(middleware.ExternalAuth(account.Delete)))
 
