@@ -1,0 +1,20 @@
+syntax = "proto3";
+
+package accountpb;
+
+service Account {
+  rpc GetByID(UserID) returns (User) {}
+  rpc CreateUser(User) returns (UserID) {}
+}
+
+message UserID {
+  string userID = 1;
+}
+
+message User {
+  int64 ID = 1;
+  string Email = 2;
+  string Name = 3;
+  string SureName = 4;
+  string AvatarURL = 5;
+}
