@@ -4,7 +4,7 @@ go 1.14
 
 require (
 	github.com/Solar-2020/Authorization-Backend v1.0.0
-	github.com/Solar-2020/GoUtils v0.0.0-20201028130128-34e4f0f5a23d
+	github.com/Solar-2020/GoUtils v1.0.3
 	github.com/buaazp/fasthttprouter v0.1.1
 	github.com/go-playground/universal-translator v0.17.0 // indirect
 	github.com/go-playground/validator v9.31.0+incompatible

@@ -2,16 +2,15 @@ package account
 
 import (
 	"database/sql"
-	"errors"
-	"github.com/Solar-2020/Account-Backend/internal/clients/yandex"
+	"fmt"
 	models2 "github.com/Solar-2020/Account-Backend/internal/models"
 	"github.com/Solar-2020/Account-Backend/pkg/models"
+	"github.com/pkg/errors"
+	"github.com/valyala/fasthttp"
 )
 
 var (
-	ErrorUserNotFound   = errors.New("Пользователь не найден")
 	ErrorInternalServer = errors.New("Внутренняя ошибка сервера")
-	ErrorNoUniqueEmail  = errors.New("Аккаунт с указанным email уже существует")
 )
 
 type Service interface {
@@ -25,13 +24,15 @@ type Service interface {
 
 type service struct {
 	accountStorage accountStorage
-	yandexClient   yandex.Client
+	yandexClient   yandexClient
+	errorWorker    errorWorker
 }
 
-func NewService(accountStorage accountStorage, yandexClient yandex.Client) Service {
+func NewService(accountStorage accountStorage, yandexClient yandexClient, errorWorker errorWorker) Service {
 	return &service{
 		accountStorage: accountStorage,
 		yandexClient:   yandexClient,
+		errorWorker:    errorWorker,
 	}
 }
 
@@ -39,9 +40,10 @@ func (s *service) GetByID(userID int) (user models.User, err error) {
 	user, err = s.accountStorage.SelectUserByID(userID)
 	if err != nil {
 		if err == sql.ErrNoRows {
-			return user, ErrorUserNotFound
+			err = s.errorWorker.NewError(fasthttp.StatusBadRequest, ErrorUserNotFound, errors.Wrap(ErrorUserNotFound, fmt.Sprintf("User ID: %v", userID)))
+			return
 		}
-		return user, ErrorInternalServer
+		return user, s.errorWorker.NewError(fasthttp.StatusInternalServerError, nil, err)
 	}
 	return
 }
@@ -50,9 +52,10 @@ func (s *service) GetByEmail(email string) (user models.User, err error) {
 	user, err = s.accountStorage.SelectUserByEmail(email)
 	if err != nil {
 		if err == sql.ErrNoRows {
-			return user, ErrorUserNotFound
+			err = s.errorWorker.NewError(fasthttp.StatusBadRequest, ErrorUserNotFoundByEmail, errors.Wrap(ErrorUserNotFoundByEmail, email))
+			return
 		}
-		return user, ErrorInternalServer
+		return user, s.errorWorker.NewError(fasthttp.StatusInternalServerError, nil, err)
 	}
 	return
 }
@@ -70,6 +73,7 @@ func (s *service) Create(createUser models.User) (user models.User, err error) {
 
 	createUser.ID, err = s.accountStorage.InsertUser(createUser)
 	if err != nil {
+		err = s.errorWorker.NewError(fasthttp.StatusInternalServerError, nil, err)
 		return
 	}
 
@@ -80,6 +84,7 @@ func (s *service) GetYandex(userToken string) (user models.User, err error) {
 	var yandexUser models2.YandexUser
 	yandexUser, err = s.yandexClient.GetUserInfo(userToken)
 	if err != nil {
+		err = s.errorWorker.NewError(fasthttp.StatusInternalServerError, nil, err)
 		return
 	}
 
@@ -95,18 +100,25 @@ func (s *service) GetYandex(userToken string) (user models.User, err error) {
 
 			user, err = s.Create(user)
 			if err != nil {
+				err = s.errorWorker.NewError(fasthttp.StatusInternalServerError, nil, err)
 				return
 			}
 
 			err = s.accountStorage.InsertYandexUser(user.ID, yandexUser.ID)
-
+			if err != nil {
+				err = s.errorWorker.NewError(fasthttp.StatusInternalServerError, nil, err)
+				return
+			}
 			return
 		}
 		return
 	}
 
 	user, err = s.accountStorage.SelectUserByID(userID)
-
+	if err != nil {
+		err = s.errorWorker.NewError(fasthttp.StatusInternalServerError, nil, err)
+		return
+	}
 	return
 }
 
@@ -118,16 +130,21 @@ func (s *service) Edit(editUser models.User) (user models.User, err error) {
 
 	existUser, err := s.accountStorage.SelectUserByEmail(editUser.Email)
 	if err != nil {
-		return user, err
+		err = s.errorWorker.NewError(fasthttp.StatusInternalServerError, nil, err)
+		return
 	}
 
 	if existUser.ID != editUser.ID {
-		return user, ErrorNoUniqueEmail
+		return user, s.errorWorker.NewError(fasthttp.StatusBadRequest, ErrorNoUniqueEmail, errors.Wrap(ErrorNoUniqueEmail, email))
 	}
 
 	err = s.accountStorage.UpdateUser(editUser)
+	if err != nil {
+		err = s.errorWorker.NewError(fasthttp.StatusInternalServerError, nil, err)
+		return
+	}
 
-	return editUser, err
+	return editUser, nil
 }
 
 func (s *service) Delete(userID int) (err error) {
@@ -146,8 +163,8 @@ func (s *service) checkUniqueEmail(email string) (err error) {
 		if err == sql.ErrNoRows {
 			return nil
 		}
-		return err
+		return s.errorWorker.NewError(fasthttp.StatusInternalServerError, nil, err)
 	}
 
-	return ErrorNoUniqueEmail
+	return s.errorWorker.NewError(fasthttp.StatusBadRequest, ErrorNoUniqueEmail, errors.Wrap(ErrorNoUniqueEmail, email))
 }

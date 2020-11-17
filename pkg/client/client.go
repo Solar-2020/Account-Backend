@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/Solar-2020/Account-Backend/pkg/models"
+	"github.com/Solar-2020/GoUtils/http/errorWorker"
 	"github.com/pkg/errors"
 	"github.com/valyala/fasthttp"
 	"strconv"
@@ -17,12 +18,13 @@ type Client interface {
 }
 
 type client struct {
-	host   string
-	secret string
+	host        string
+	secret      string
+	errorWorker errorWorker.ErrorWorker
 }
 
 func NewClient(host string, secret string) Client {
-	return &client{host: host, secret: secret}
+	return &client{host: host, secret: secret, errorWorker: errorWorker.NewErrorWorker()}
 }
 
 func (c *client) GetUserByUid(userID int) (user models.User, err error) {
@@ -54,13 +56,9 @@ func (c *client) GetUserByUid(userID int) (user models.User, err error) {
 		if err != nil {
 			return
 		}
-		return user, errors.New(httpErr.Error)
+		return user, c.errorWorker.NewError(fasthttp.StatusBadRequest, errors.New(httpErr.Error), errors.New(httpErr.Error))
 	default:
-		return user, ResponseError{
-			StatusCode: resp.StatusCode(),
-			Message:    InternalServerStatus,
-			Err:        errors.Errorf(ErrorUnknownStatusCode, resp.StatusCode()),
-		}
+		return user, c.errorWorker.NewError(fasthttp.StatusInternalServerError, nil, errors.Errorf(ErrorUnknownStatusCode, resp.StatusCode()))
 	}
 }
 
@@ -93,13 +91,9 @@ func (c *client) GetUserByEmail(email string) (user models.User, err error) {
 		if err != nil {
 			return
 		}
-		return user, errors.New(httpErr.Error)
+		return user, c.errorWorker.NewError(fasthttp.StatusBadRequest, errors.New(httpErr.Error), errors.New(httpErr.Error))
 	default:
-		return user, ResponseError{
-			StatusCode: resp.StatusCode(),
-			Message:    InternalServerStatus,
-			Err:        errors.Errorf(ErrorUnknownStatusCode, resp.StatusCode()),
-		}
+		return user, c.errorWorker.NewError(fasthttp.StatusInternalServerError, nil, errors.Errorf(ErrorUnknownStatusCode, resp.StatusCode()))
 	}
 }
 
@@ -132,13 +126,9 @@ func (c *client) GetYandexUser(userToken string) (user models.User, err error) {
 		if err != nil {
 			return
 		}
-		return user, errors.New(httpErr.Error)
+		return user, c.errorWorker.NewError(fasthttp.StatusBadRequest, errors.New(httpErr.Error), errors.New(httpErr.Error))
 	default:
-		return user, ResponseError{
-			StatusCode: resp.StatusCode(),
-			Message:    InternalServerStatus,
-			Err:        errors.Errorf(ErrorUnknownStatusCode, resp.StatusCode()),
-		}
+		return user, c.errorWorker.NewError(fasthttp.StatusInternalServerError, nil, errors.Errorf(ErrorUnknownStatusCode, resp.StatusCode()))
 	}
 }
 
@@ -178,12 +168,8 @@ func (c *client) CreateUser(request models.User) (userID int, err error) {
 		if err != nil {
 			return
 		}
-		return userID, errors.New(httpErr.Error)
+		return userID, c.errorWorker.NewError(fasthttp.StatusBadRequest, errors.New(httpErr.Error), errors.New(httpErr.Error))
 	default:
-		return userID, ResponseError{
-			StatusCode: resp.StatusCode(),
-			Message:    InternalServerStatus,
-			Err:        errors.Errorf(ErrorUnknownStatusCode, resp.StatusCode()),
-		}
+		return userID, c.errorWorker.NewError(fasthttp.StatusInternalServerError, nil, errors.Errorf(ErrorUnknownStatusCode, resp.StatusCode()))
 	}
 }
