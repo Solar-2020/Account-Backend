@@ -12,6 +12,7 @@ require (
 	github.com/kelseyhightower/envconfig v1.4.0
 	github.com/leodido/go-urn v1.2.0 // indirect
 	github.com/lib/pq v1.8.0
+	github.com/pkg/errors v0.8.1
 	github.com/rs/zerolog v1.20.0
 	github.com/valyala/fasthttp v1.16.0
 	google.golang.org/grpc v1.27.0

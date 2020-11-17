@@ -51,7 +51,7 @@ func main() {
 	yandexClient := yandex.NewClient()
 
 	accountStorage := accountStorage.NewStorage(authorizationDB)
-	accountService := account.NewService(accountStorage, yandexClient)
+	accountService := account.NewService(accountStorage, yandexClient, errorWorker)
 	accountTransport := account.NewTransport()
 
 	accountHandler := accountHandler.NewHandler(accountService, accountTransport, errorWorker)

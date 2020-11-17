@@ -135,7 +135,7 @@ func (s *service) Edit(editUser models.User) (user models.User, err error) {
 	}
 
 	if existUser.ID != editUser.ID {
-		return user, s.errorWorker.NewError(fasthttp.StatusBadRequest, ErrorNoUniqueEmail, errors.Wrap(ErrorNoUniqueEmail, email))
+		return user, s.errorWorker.NewError(fasthttp.StatusBadRequest, ErrorNoUniqueEmail, errors.Wrap(ErrorNoUniqueEmail, editUser.Email))
 	}
 
 	err = s.accountStorage.UpdateUser(editUser)
