@@ -42,19 +42,22 @@ func (c *client) GetUserByUid(userID int) (user models.User, err error) {
 
 	err = fasthttp.Do(req, resp)
 	if err != nil {
-		return
+		return user, c.errorWorker.NewError(fasthttp.StatusInternalServerError, nil, err)
 	}
 
 	switch resp.StatusCode() {
 	case fasthttp.StatusOK:
 		var response models.User
 		err = json.Unmarshal(resp.Body(), &response)
-		return response, err
+		if err != nil {
+			return user, c.errorWorker.NewError(fasthttp.StatusInternalServerError, nil, err)
+		}
+		return response, nil
 	case fasthttp.StatusBadRequest:
 		var httpErr httpError
 		err = json.Unmarshal(resp.Body(), &httpErr)
 		if err != nil {
-			return
+			return user, c.errorWorker.NewError(fasthttp.StatusInternalServerError, nil, err)
 		}
 		return user, c.errorWorker.NewError(fasthttp.StatusBadRequest, errors.New(httpErr.Error), errors.New(httpErr.Error))
 	default:
@@ -77,19 +80,22 @@ func (c *client) GetUserByEmail(email string) (user models.User, err error) {
 
 	err = fasthttp.Do(req, resp)
 	if err != nil {
-		return
+		return user, c.errorWorker.NewError(fasthttp.StatusInternalServerError, nil, err)
 	}
 
 	switch resp.StatusCode() {
 	case fasthttp.StatusOK:
 		var response models.User
 		err = json.Unmarshal(resp.Body(), &response)
-		return response, err
+		if err != nil {
+			return user, c.errorWorker.NewError(fasthttp.StatusInternalServerError, nil, err)
+		}
+		return response, nil
 	case fasthttp.StatusBadRequest:
 		var httpErr httpError
 		err = json.Unmarshal(resp.Body(), &httpErr)
 		if err != nil {
-			return
+			return user, c.errorWorker.NewError(fasthttp.StatusInternalServerError, nil, err)
 		}
 		return user, c.errorWorker.NewError(fasthttp.StatusBadRequest, errors.New(httpErr.Error), errors.New(httpErr.Error))
 	default:
@@ -112,19 +118,22 @@ func (c *client) GetYandexUser(userToken string) (user models.User, err error) {
 
 	err = fasthttp.Do(req, resp)
 	if err != nil {
-		return
+		return user, c.errorWorker.NewError(fasthttp.StatusInternalServerError, nil, err)
 	}
 
 	switch resp.StatusCode() {
 	case fasthttp.StatusOK:
 		var response models.User
 		err = json.Unmarshal(resp.Body(), &response)
-		return response, err
+		if err != nil {
+			return user, c.errorWorker.NewError(fasthttp.StatusInternalServerError, nil, err)
+		}
+		return response, nil
 	case fasthttp.StatusBadRequest:
 		var httpErr httpError
 		err = json.Unmarshal(resp.Body(), &httpErr)
 		if err != nil {
-			return
+			return user, c.errorWorker.NewError(fasthttp.StatusInternalServerError, nil, err)
 		}
 		return user, c.errorWorker.NewError(fasthttp.StatusBadRequest, errors.New(httpErr.Error), errors.New(httpErr.Error))
 	default:
@@ -154,19 +163,22 @@ func (c *client) CreateUser(request models.User) (userID int, err error) {
 
 	err = fasthttp.Do(req, resp)
 	if err != nil {
-		return
+		return userID, c.errorWorker.NewError(fasthttp.StatusInternalServerError, nil, err)
 	}
 
 	switch resp.StatusCode() {
 	case fasthttp.StatusOK:
 		var response models.User
 		err = json.Unmarshal(resp.Body(), &response)
-		return response.ID, err
+		if err != nil {
+			return userID, c.errorWorker.NewError(fasthttp.StatusInternalServerError, nil, err)
+		}
+		return response.ID, nil
 	case fasthttp.StatusBadRequest:
 		var httpErr httpError
 		err = json.Unmarshal(resp.Body(), &httpErr)
 		if err != nil {
-			return
+			return userID, c.errorWorker.NewError(fasthttp.StatusInternalServerError, nil, err)
 		}
 		return userID, c.errorWorker.NewError(fasthttp.StatusBadRequest, errors.New(httpErr.Error), errors.New(httpErr.Error))
 	default:
