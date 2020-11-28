@@ -7,3 +7,8 @@ type User struct {
 	Surname   string `json:"surname"`
 	AvatarURL string `json:"avatarURL"`
 }
+
+type UserAdvance struct {
+	ID        int    `json:"id"`
+	Email     string `json:"email" validate:"required,email"`
+}

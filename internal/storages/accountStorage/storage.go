@@ -7,9 +7,11 @@ import (
 
 type Storage interface {
 	InsertUser(user models.User) (userID int, err error)
+	InsertUserAdvance(user models.UserAdvance) (userID int, err error)
 	InsertYandexUser(userID int, yandexID string) (err error)
 
 	UpdateUser(user models.User) (err error)
+	UpdateUserAdvance(user models.User) (userID int, err error)
 	SelectUserByID(userID int) (user models.User, err error)
 	SelectUserByEmail(email string) (user models.User, err error)
 	SelectUserIDByYandexID(yandexID string) (userID int, err error)
@@ -38,6 +40,17 @@ func (s *storage) InsertUser(user models.User) (userID int, err error) {
 	return
 }
 
+func (s *storage) InsertUserAdvance(user models.UserAdvance) (userID int, err error) {
+	const sqlQuery = `
+	INSERT INTO users(email, name, surname, avatar_url, status)
+	VALUES ($1, $2, $3, $4, 3)
+	RETURNING id`
+
+	err = s.db.QueryRow(sqlQuery, user.Email, "", "", "").Scan(&userID)
+
+	return
+}
+
 func (s *storage) InsertYandexUser(userID int, yandexID string) (err error) {
 	const sqlQuery = `
 	INSERT INTO users_yandex(user_id, yandex_id)
@@ -58,6 +71,20 @@ func (s *storage) UpdateUser(user models.User) (err error) {
 	WHERE id = $5 AND status = 1;`
 
 	_, err = s.db.Exec(sqlQuery, user.Email, user.Name, user.Surname, user.AvatarURL, user.ID)
+
+	return
+}
+
+func (s *storage) UpdateUserAdvance(user models.User) (userID int, err error) {
+	const sqlQuery = `
+	UPDATE users
+	SET name = $1,
+		surname = $2,
+		avatar_url = $3,
+		status = 1
+	WHERE email = $4 AND status = 3;`
+
+	_, err = s.db.Exec(sqlQuery, user.Name, user.Surname, user.AvatarURL, user.Email)
 
 	return
 }
