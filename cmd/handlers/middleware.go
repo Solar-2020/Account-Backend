@@ -1,7 +1,7 @@
 package handlers
 
 import (
-	auth "github.com/Solar-2020/Authorization-Backend/pkg/client"
+	"github.com/Solar-2020/Account-Backend/internal/clients/auth"
 	"github.com/Solar-2020/GoUtils/log"
 	"github.com/rs/zerolog"
 	"github.com/valyala/fasthttp"
