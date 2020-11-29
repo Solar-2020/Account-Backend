@@ -15,7 +15,7 @@ type Client interface {
 	GetUserByEmail(email string) (user models.User, err error)
 	GetYandexUser(userToken string) (user models.User, err error)
 	CreateUser(request models.User) (userID int, err error)
-	CreateUserAdvance(request models.UserAdvance) (userID int, err error)
+	CreateUserAdvance(request models.UserAdvance) (user models.User, err error)
 }
 
 type client struct {
