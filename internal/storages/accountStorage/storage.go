@@ -14,6 +14,7 @@ type Storage interface {
 	UpdateUserAdvance(user models.User) (userID int, err error)
 	SelectUserByID(userID int) (user models.User, err error)
 	SelectUserByEmail(email string) (user models.User, err error)
+	SelectUserAdvanceByEmail(email string) (user models.User, err error)
 	SelectUserIDByYandexID(yandexID string) (userID int, err error)
 
 	DeleteUser(userID int) (err error)
@@ -82,9 +83,10 @@ func (s *storage) UpdateUserAdvance(user models.User) (userID int, err error) {
 		surname = $2,
 		avatar_url = $3,
 		status = 1
-	WHERE email = $4 AND status = 3;`
+	WHERE email = $4 AND status = 3
+	RETURNING id;`
 
-	_, err = s.db.Exec(sqlQuery, user.Name, user.Surname, user.AvatarURL, user.Email)
+	err = s.db.QueryRow(sqlQuery, user.Name, user.Surname, user.AvatarURL, user.Email).Scan(&userID)
 
 	return
 }
@@ -105,6 +107,17 @@ func (s *storage) SelectUserByEmail(email string) (user models.User, err error) 
 	SELECT u.id, u.email, u.name, u.surname, u.avatar_url
 	FROM users as u
 	WHERE UPPER(u.email) = UPPER($1) AND status = 1;`
+
+	err = s.db.QueryRow(sqlQuery, email).Scan(&user.ID, &user.Email, &user.Name, &user.Surname, &user.AvatarURL)
+
+	return
+}
+
+func (s *storage) SelectUserAdvanceByEmail(email string) (user models.User, err error) {
+	const sqlQuery = `
+	SELECT u.id, u.email, u.name, u.surname, u.avatar_url
+	FROM users as u
+	WHERE UPPER(u.email) = UPPER($1) AND status = 3;`
 
 	err = s.db.QueryRow(sqlQuery, email).Scan(&user.ID, &user.Email, &user.Name, &user.Surname, &user.AvatarURL)
 

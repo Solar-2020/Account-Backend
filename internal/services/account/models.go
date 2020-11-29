@@ -21,6 +21,7 @@ type accountStorage interface {
 	UpdateUserAdvance(user models.User) (userID int, err error)
 	SelectUserByID(userID int) (user models.User, err error)
 	SelectUserByEmail(email string) (user models.User, err error)
+	SelectUserAdvanceByEmail(email string) (user models.User, err error)
 	SelectUserIDByYandexID(yandexID string) (userID int, err error)
 
 	DeleteUser(userID int) (err error)

@@ -72,7 +72,7 @@ func (s *service) Create(createUser models.User) (user models.User, err error) {
 		return
 	}
 
-	_, err = s.accountStorage.SelectUserByEmail(createUser.Email)
+	_, err = s.accountStorage.SelectUserAdvanceByEmail(createUser.Email)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			createUser.ID, err = s.accountStorage.InsertUser(createUser)
