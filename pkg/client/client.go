@@ -187,7 +187,7 @@ func (c *client) CreateUser(request models.User) (userID int, err error) {
 	}
 }
 
-func (c *client) CreateUserAdvance(request models.UserAdvance) (userID int, err error) {
+func (c *client) CreateUserAdvance(request models.UserAdvance) (user models.User, err error) {
 	req := fasthttp.AcquireRequest()
 	resp := fasthttp.AcquireResponse()
 	defer fasthttp.ReleaseRequest(req)
@@ -209,7 +209,7 @@ func (c *client) CreateUserAdvance(request models.UserAdvance) (userID int, err 
 
 	err = fasthttp.Do(req, resp)
 	if err != nil {
-		return userID, c.errorWorker.NewError(fasthttp.StatusInternalServerError, nil, err)
+		return user, c.errorWorker.NewError(fasthttp.StatusInternalServerError, nil, err)
 	}
 
 	switch resp.StatusCode() {
@@ -217,17 +217,17 @@ func (c *client) CreateUserAdvance(request models.UserAdvance) (userID int, err 
 		var response models.User
 		err = json.Unmarshal(resp.Body(), &response)
 		if err != nil {
-			return userID, c.errorWorker.NewError(fasthttp.StatusInternalServerError, nil, err)
+			return user, c.errorWorker.NewError(fasthttp.StatusInternalServerError, nil, err)
 		}
-		return response.ID, nil
+		return response, nil
 	case fasthttp.StatusBadRequest:
 		var httpErr httpError
 		err = json.Unmarshal(resp.Body(), &httpErr)
 		if err != nil {
-			return userID, c.errorWorker.NewError(fasthttp.StatusInternalServerError, nil, err)
+			return user, c.errorWorker.NewError(fasthttp.StatusInternalServerError, nil, err)
 		}
-		return userID, c.errorWorker.NewError(fasthttp.StatusBadRequest, errors.New(httpErr.Error), errors.New(httpErr.Error))
+		return user, c.errorWorker.NewError(fasthttp.StatusBadRequest, errors.New(httpErr.Error), errors.New(httpErr.Error))
 	default:
-		return userID, c.errorWorker.NewError(fasthttp.StatusInternalServerError, nil, errors.Errorf(ErrorUnknownStatusCode, resp.StatusCode()))
+		return user, c.errorWorker.NewError(fasthttp.StatusInternalServerError, nil, errors.Errorf(ErrorUnknownStatusCode, resp.StatusCode()))
 	}
 }
