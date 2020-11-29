@@ -14,6 +14,7 @@ import (
 	_ "github.com/lib/pq"
 	"github.com/rs/zerolog"
 	"github.com/valyala/fasthttp"
+	"net/url"
 	"os"
 	"os/signal"
 	"syscall"
@@ -53,8 +54,12 @@ func main() {
 	accountTransport := account.NewTransport()
 
 	accountHandler := accountHandler.NewHandler(accountService, accountTransport, errorWorker)
-
-	authClient := auth.NewClient(cfg.AuthServiceAddress, cfg.ServerSecret)
+	authURL, err := url.ParseRequestURI(cfg.AuthServiceAddress)
+	if err != nil {
+		log.Fatal().Msg(err.Error())
+		return
+	}
+	authClient := auth.NewClient(authURL.Host, cfg.ServerSecret)
 	middlewares := handlers.NewMiddleware(&log, authClient)
 
 	server := fasthttp.Server{
