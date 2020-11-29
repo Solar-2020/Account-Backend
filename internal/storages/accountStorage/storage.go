@@ -15,6 +15,7 @@ type Storage interface {
 	SelectUserByID(userID int) (user models.User, err error)
 	SelectUserByEmail(email string) (user models.User, err error)
 	SelectUserAdvanceByEmail(email string) (user models.User, err error)
+	SelectCreatedUserByEmail(email string) (user models.User, err error)
 	SelectUserIDByYandexID(yandexID string) (userID int, err error)
 
 	DeleteUser(userID int) (err error)
@@ -107,6 +108,17 @@ func (s *storage) SelectUserByEmail(email string) (user models.User, err error) 
 	SELECT u.id, u.email, u.name, u.surname, u.avatar_url
 	FROM users as u
 	WHERE UPPER(u.email) = UPPER($1) AND status IN (1,3);`
+
+	err = s.db.QueryRow(sqlQuery, email).Scan(&user.ID, &user.Email, &user.Name, &user.Surname, &user.AvatarURL)
+
+	return
+}
+
+func (s *storage) SelectCreatedUserByEmail(email string) (user models.User, err error) {
+	const sqlQuery = `
+	SELECT u.id, u.email, u.name, u.surname, u.avatar_url
+	FROM users as u
+	WHERE UPPER(u.email) = UPPER($1) AND status = 1;`
 
 	err = s.db.QueryRow(sqlQuery, email).Scan(&user.ID, &user.Email, &user.Name, &user.Surname, &user.AvatarURL)
 

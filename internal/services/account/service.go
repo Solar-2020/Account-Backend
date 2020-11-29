@@ -193,7 +193,7 @@ func (s *service) validateUser(user models.User) (err error) {
 }
 
 func (s *service) checkUniqueEmail(email string) (err error) {
-	_, err = s.accountStorage.SelectUserByEmail(email)
+	_, err = s.accountStorage.SelectCreatedUserByEmail(email)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return nil
