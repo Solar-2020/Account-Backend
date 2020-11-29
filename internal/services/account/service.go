@@ -17,7 +17,7 @@ type Service interface {
 	GetByID(userID int) (user models.User, err error)
 	GetByEmail(email string) (user models.User, err error)
 	Create(createUser models.User) (user models.User, err error)
-	CreateAdvance(createUser models.UserAdvance) (user models.UserAdvance, err error)
+	CreateAdvance(createUser models.UserAdvance) (user models.User, err error)
 	GetYandex(userToken string) (user models.User, err error)
 	Edit(editUser models.User) (user models.User, err error)
 	Delete(userID int) (err error)
@@ -95,19 +95,24 @@ func (s *service) Create(createUser models.User) (user models.User, err error) {
 	return createUser, nil
 }
 
-func (s *service) CreateAdvance(createUser models.UserAdvance) (user models.UserAdvance, err error) {
+func (s *service) CreateAdvance(createUser models.UserAdvance) (user models.User, err error) {
 	err = s.checkUniqueEmail(createUser.Email)
 	if err != nil {
 		return
 	}
 
-	createUser.ID, err = s.accountStorage.InsertUserAdvance(createUser)
+	user, err = s.accountStorage.SelectUserAdvanceByEmail(createUser.Email)
+	if err == nil {
+		return
+	}
+	user.Email = createUser.Email
+	user.ID, err = s.accountStorage.InsertUserAdvance(createUser)
 	if err != nil {
 		err = s.errorWorker.NewError(fasthttp.StatusInternalServerError, nil, err)
 		return
 	}
 
-	return createUser, nil
+	return user, nil
 }
 
 func (s *service) GetYandex(userToken string) (user models.User, err error) {

@@ -23,7 +23,7 @@ type Transport interface {
 	CreateEncode(ctx *fasthttp.RequestCtx, user models.User) (err error)
 
 	CreateAdvanceDecode(ctx *fasthttp.RequestCtx) (createUserAdvance models.UserAdvance, err error)
-	CreateAdvanceEncode(ctx *fasthttp.RequestCtx, user models.UserAdvance) (err error)
+	CreateAdvanceEncode(ctx *fasthttp.RequestCtx, user models.User) (err error)
 
 	EditDecode(ctx *fasthttp.RequestCtx) (createUser models.User, err error)
 	EditEncode(ctx *fasthttp.RequestCtx, user models.User) (err error)
@@ -118,7 +118,7 @@ func (t transport) CreateAdvanceDecode(ctx *fasthttp.RequestCtx) (createUserAdva
 	return
 }
 
-func (t transport) CreateAdvanceEncode(ctx *fasthttp.RequestCtx, user models.UserAdvance) (err error) {
+func (t transport) CreateAdvanceEncode(ctx *fasthttp.RequestCtx, user models.User) (err error) {
 	body, err := json.Marshal(user)
 	if err != nil {
 		return
