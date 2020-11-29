@@ -95,7 +95,7 @@ func (s *storage) SelectUserByID(userID int) (user models.User, err error) {
 	const sqlQuery = `
 	SELECT u.id, u.email, u.name, u.surname, u.avatar_url
 	FROM users as u
-	WHERE u.id = $1 AND status = 1;`
+	WHERE u.id = $1 AND status IN (1,3);`
 
 	err = s.db.QueryRow(sqlQuery, userID).Scan(&user.ID, &user.Email, &user.Name, &user.Surname, &user.AvatarURL)
 
@@ -106,7 +106,7 @@ func (s *storage) SelectUserByEmail(email string) (user models.User, err error) 
 	const sqlQuery = `
 	SELECT u.id, u.email, u.name, u.surname, u.avatar_url
 	FROM users as u
-	WHERE UPPER(u.email) = UPPER($1) AND status = 1;`
+	WHERE UPPER(u.email) = UPPER($1) AND status IN (1,3);`
 
 	err = s.db.QueryRow(sqlQuery, email).Scan(&user.ID, &user.Email, &user.Name, &user.Surname, &user.AvatarURL)
 

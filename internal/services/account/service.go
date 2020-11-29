@@ -96,12 +96,12 @@ func (s *service) Create(createUser models.User) (user models.User, err error) {
 }
 
 func (s *service) CreateAdvance(createUser models.UserAdvance) (user models.User, err error) {
-	err = s.checkUniqueEmail(createUser.Email)
-	if err != nil {
-		return
-	}
+	//err = s.checkUniqueEmail(createUser.Email)
+	//if err != nil {
+	//	return
+	//}
 
-	user, err = s.accountStorage.SelectUserAdvanceByEmail(createUser.Email)
+	user, err = s.accountStorage.SelectUserByEmail(createUser.Email)
 	if err == nil {
 		return
 	}
