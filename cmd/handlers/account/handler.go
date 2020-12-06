@@ -10,6 +10,7 @@ type Handler interface {
 	GetByCookie(ctx *fasthttp.RequestCtx)
 
 	Create(ctx *fasthttp.RequestCtx)
+	CreateAdvance(ctx *fasthttp.RequestCtx)
 	GetYandex(ctx *fasthttp.RequestCtx)
 	Edit(ctx *fasthttp.RequestCtx)
 	Delete(ctx *fasthttp.RequestCtx)
@@ -109,6 +110,26 @@ func (h *handler) Create(ctx *fasthttp.RequestCtx) {
 	}
 }
 
+func (h *handler) CreateAdvance(ctx *fasthttp.RequestCtx) {
+	createUser, err := h.accountTransport.CreateAdvanceDecode(ctx)
+	if err != nil {
+		h.errorWorker.ServeJSONError(ctx, err)
+		return
+	}
+
+	user, err := h.accountService.CreateAdvance(createUser)
+	if err != nil {
+		h.errorWorker.ServeJSONError(ctx, err)
+		return
+	}
+
+	err = h.accountTransport.CreateAdvanceEncode(ctx, user)
+	if err != nil {
+		h.errorWorker.ServeJSONError(ctx, err)
+		return
+	}
+}
+
 func (h *handler) GetYandex(ctx *fasthttp.RequestCtx) {
 	createUser, err := h.accountTransport.GetYandexDecode(ctx)
 	if err != nil {
@@ -168,4 +189,3 @@ func (h *handler) Delete(ctx *fasthttp.RequestCtx) {
 		return
 	}
 }
-

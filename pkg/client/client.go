@@ -15,6 +15,7 @@ type Client interface {
 	GetUserByEmail(email string) (user models.User, err error)
 	GetYandexUser(userToken string) (user models.User, err error)
 	CreateUser(request models.User) (userID int, err error)
+	CreateUserAdvance(request models.UserAdvance) (user models.User, err error)
 }
 
 type client struct {
@@ -183,5 +184,50 @@ func (c *client) CreateUser(request models.User) (userID int, err error) {
 		return userID, c.errorWorker.NewError(fasthttp.StatusBadRequest, errors.New(httpErr.Error), errors.New(httpErr.Error))
 	default:
 		return userID, c.errorWorker.NewError(fasthttp.StatusInternalServerError, nil, errors.Errorf(ErrorUnknownStatusCode, resp.StatusCode()))
+	}
+}
+
+func (c *client) CreateUserAdvance(request models.UserAdvance) (user models.User, err error) {
+	req := fasthttp.AcquireRequest()
+	resp := fasthttp.AcquireResponse()
+	defer fasthttp.ReleaseRequest(req)
+	defer fasthttp.ReleaseResponse(resp)
+
+	body, err := json.Marshal(request)
+	if err != nil {
+		return
+	}
+
+	req.Header.SetMethod(fasthttp.MethodPost)
+	req.Header.Add("Authorization", c.secret)
+
+	req.URI().SetScheme("http")
+	req.URI().SetHost(c.host)
+	req.URI().SetPath("api/internal/account/user-advance")
+
+	req.SetBody(body)
+
+	err = fasthttp.Do(req, resp)
+	if err != nil {
+		return user, c.errorWorker.NewError(fasthttp.StatusInternalServerError, nil, err)
+	}
+
+	switch resp.StatusCode() {
+	case fasthttp.StatusOK:
+		var response models.User
+		err = json.Unmarshal(resp.Body(), &response)
+		if err != nil {
+			return user, c.errorWorker.NewError(fasthttp.StatusInternalServerError, nil, err)
+		}
+		return response, nil
+	case fasthttp.StatusBadRequest:
+		var httpErr httpError
+		err = json.Unmarshal(resp.Body(), &httpErr)
+		if err != nil {
+			return user, c.errorWorker.NewError(fasthttp.StatusInternalServerError, nil, err)
+		}
+		return user, c.errorWorker.NewError(fasthttp.StatusBadRequest, errors.New(httpErr.Error), errors.New(httpErr.Error))
+	default:
+		return user, c.errorWorker.NewError(fasthttp.StatusInternalServerError, nil, errors.Errorf(ErrorUnknownStatusCode, resp.StatusCode()))
 	}
 }

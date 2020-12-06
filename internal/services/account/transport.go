@@ -22,6 +22,9 @@ type Transport interface {
 	CreateDecode(ctx *fasthttp.RequestCtx) (createUser models.User, err error)
 	CreateEncode(ctx *fasthttp.RequestCtx, user models.User) (err error)
 
+	CreateAdvanceDecode(ctx *fasthttp.RequestCtx) (createUserAdvance models.UserAdvance, err error)
+	CreateAdvanceEncode(ctx *fasthttp.RequestCtx, user models.User) (err error)
+
 	EditDecode(ctx *fasthttp.RequestCtx) (createUser models.User, err error)
 	EditEncode(ctx *fasthttp.RequestCtx, user models.User) (err error)
 
@@ -96,6 +99,26 @@ func (t transport) CreateDecode(ctx *fasthttp.RequestCtx) (createUser models.Use
 }
 
 func (t transport) CreateEncode(ctx *fasthttp.RequestCtx, user models.User) (err error) {
+	body, err := json.Marshal(user)
+	if err != nil {
+		return
+	}
+	ctx.Response.Header.SetContentType("application/json")
+	ctx.Response.Header.SetStatusCode(fasthttp.StatusOK)
+	ctx.SetBody(body)
+	return
+}
+
+func (t transport) CreateAdvanceDecode(ctx *fasthttp.RequestCtx) (createUserAdvance models.UserAdvance, err error) {
+	err = json.Unmarshal(ctx.Request.Body(), &createUserAdvance)
+	if err != nil {
+		return
+	}
+	err = t.validator.Struct(createUserAdvance)
+	return
+}
+
+func (t transport) CreateAdvanceEncode(ctx *fasthttp.RequestCtx, user models.User) (err error) {
 	body, err := json.Marshal(user)
 	if err != nil {
 		return

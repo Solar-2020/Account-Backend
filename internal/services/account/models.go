@@ -14,11 +14,15 @@ var (
 
 type accountStorage interface {
 	InsertUser(user models.User) (userID int, err error)
+	InsertUserAdvance(user models.UserAdvance) (userID int, err error)
 	InsertYandexUser(userID int, yandexID string) (err error)
 
 	UpdateUser(user models.User) (err error)
+	UpdateUserAdvance(user models.User) (userID int, err error)
 	SelectUserByID(userID int) (user models.User, err error)
 	SelectUserByEmail(email string) (user models.User, err error)
+	SelectUserAdvanceByEmail(email string) (user models.User, err error)
+	SelectCreatedUserByEmail(email string) (user models.User, err error)
 	SelectUserIDByYandexID(yandexID string) (userID int, err error)
 
 	DeleteUser(userID int) (err error)
